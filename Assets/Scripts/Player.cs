@@ -7,11 +7,11 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
 
 
     public static Player Instance { get; private set; }
-    
 
+    public event EventHandler OnPickedSomething;
     public event EventHandler<OnSelectedCounterChangedEventArgs> OnSelectedCounterChanged;
     public class OnSelectedCounterChangedEventArgs : EventArgs {
-        public BaseCounter selectedCounter; 
+        public BaseCounter selectedCounter;
     }
 
     [SerializeField] private float moveSpeed = 7f;
@@ -32,26 +32,29 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
     }
 
     private void GameInput_OnInteractAlternateAction(object sender, EventArgs e) {
+        if (!GameManager.Instance.IsGamePlaying()) return;
         if (selectedCounter != null) {
             selectedCounter.InteractAlternate(this);
         }
     }
 
     private void GameInput_OnInteractAction(object sender, System.EventArgs e) {
+        if (!GameManager.Instance.IsGamePlaying()) return;
         if (selectedCounter != null) {
             selectedCounter.Interact(this);
         }
-        
+
     }
 
     private void Awake() {
-        if(Instance != null) {
+        if (Instance != null) {
             Debug.LogError("There is more than one player instance!");
         }
         Instance = this;
     }
 
     private void Update() {
+        if (!GameManager.Instance.IsGamePlaying()) return;
         HandleMovement();
         HandleInteractions();
     }
@@ -73,7 +76,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
         if (Physics.Raycast(transform.position, lastInteractDir, out RaycastHit raycastHit, interactDistance, countersLayerMask)) {
             if (raycastHit.transform.TryGetComponent(out BaseCounter baseCounter)) {
                 // has ClearCounter
-                if(baseCounter != selectedCounter) {
+                if (baseCounter != selectedCounter) {
                     SetSelectedCounter(baseCounter);
                 }
             } else {
@@ -87,6 +90,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
     }
 
     private void HandleMovement() {
+
         Vector2 inputVector = gameInput.GetMovementVectorNormalized();
 
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
@@ -134,6 +138,9 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
     }
 
     public void SetKitchenObject(KitchenObject kitchenObject) {
+        if (kitchenObject != null) {
+            OnPickedSomething?.Invoke(this, EventArgs.Empty);
+        }
         this.kitchenObject = kitchenObject;
     }
 
