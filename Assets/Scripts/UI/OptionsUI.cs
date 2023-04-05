@@ -11,6 +11,9 @@ public class OptionsUI : MonoBehaviour {
 
     [SerializeField] private Button soundEffectsButton;
     [SerializeField] private Button musicButton;
+    [SerializeField] private Slider soundEffectsSlider;
+    [SerializeField] private Slider musicSlider;
+
     [SerializeField] private Button backButton;
     [SerializeField] private Button moveUpButton;
     [SerializeField] private Button moveDownButton;
@@ -52,6 +55,17 @@ public class OptionsUI : MonoBehaviour {
             UpdateVisual();
 
         });
+
+        soundEffectsSlider.onValueChanged.AddListener((volumeValue) => {
+            SoundManager.Instance.ChangeVolumeSlider(volumeValue);
+            UpdateVisual();
+        });
+
+        musicSlider.onValueChanged.AddListener((volumeValue) => {
+            MusicManager.Instance.ChangeVolumeSlider(volumeValue);
+            UpdateVisual();
+        });
+
 
         backButton.onClick.AddListener(() => {
             Hide();

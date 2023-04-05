@@ -28,6 +28,15 @@ public class MusicManager : MonoBehaviour {
         PlayerPrefs.Save();
     }
 
+    public void ChangeVolumeSlider(float volume) {
+        this.volume = volume;
+        if (volume > 1f) volume = 0f;
+        audioSource.volume = volume;
+
+        PlayerPrefs.SetFloat(PLAYER_PREFS_MUSIC_VOLUME, this.volume);
+        PlayerPrefs.Save();
+    }
+
     public float GetVolume() {
         return volume;
     }

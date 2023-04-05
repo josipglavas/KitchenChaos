@@ -76,6 +76,15 @@ public class SoundManager : MonoBehaviour {
         PlayerPrefs.Save();
     }
 
+    public void ChangeVolumeSlider(float volume) {
+        this.volume = volume;
+        volume += .1f;
+        if (volume > 1f) volume = 0f;
+
+        PlayerPrefs.SetFloat(PLAYER_PREFS_SOUND_EFFECTS_VOLUME, this.volume);
+        PlayerPrefs.Save();
+    }
+
     public float GetVolume() {
         return volume;
     }
