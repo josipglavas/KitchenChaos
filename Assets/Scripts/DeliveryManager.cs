@@ -2,7 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-public class DeliveryManager : MonoBehaviour {
+using Unity.Netcode;
+
+
+public class DeliveryManager : NetworkBehaviour {
 
     public event EventHandler onRecipeSpawned;
     public event EventHandler onRecipeCompleted;
@@ -15,7 +18,7 @@ public class DeliveryManager : MonoBehaviour {
 
     private List<RecipeSO> waitingRecipeSOList;
 
-    private float spawnRecipeTimer;
+    private float spawnRecipeTimer = 4f;
     private float spawnRecipeTimerMax = 4f;
     private int waitingRecipesMax = 4;
     private int successfulRecipeAmount = 0;
@@ -28,18 +31,27 @@ public class DeliveryManager : MonoBehaviour {
     }
 
     private void Update() {
+        if (!IsServer) return;
+
+
         spawnRecipeTimer -= Time.deltaTime;
         if (spawnRecipeTimer <= 0f) {
             spawnRecipeTimer = spawnRecipeTimerMax;
-            if (waitingRecipeSOList.Count < waitingRecipesMax) {
-
-                RecipeSO waitingRecipeSO = recipeListSO.recipeSOList[UnityEngine.Random.Range(0, recipeListSO.recipeSOList.Count)];
-                waitingRecipeSOList.Add(waitingRecipeSO);
-
-                onRecipeSpawned?.Invoke(this, EventArgs.Empty);
+            if (GameManager.Instance.IsGamePlaying() && waitingRecipeSOList.Count < waitingRecipesMax) {
+                int waitingRecipeSOIndex = UnityEngine.Random.Range(0, recipeListSO.recipeSOList.Count);
+                SpawnNewWaitingRecipeClientRpc(waitingRecipeSOIndex);
             }
 
         }
+    }
+    [ClientRpc]
+    private void SpawnNewWaitingRecipeClientRpc(int waitingRecipeSOIndex) {
+
+        RecipeSO waitingRecipeSO = recipeListSO.recipeSOList[waitingRecipeSOIndex];
+
+        waitingRecipeSOList.Add(waitingRecipeSO);
+
+        onRecipeSpawned?.Invoke(this, EventArgs.Empty);
     }
 
     public void DeliverRecipe(PlateKitchenObject plateKitchenObject) {
@@ -68,16 +80,36 @@ public class DeliveryManager : MonoBehaviour {
                 }
                 if (plateContentsMatchesRecipe) {
                     //player delivered the correct recipe!
-                    successfulRecipeAmount++;
-                    waitingRecipeSOList.RemoveAt(i);
-                    onRecipeCompleted?.Invoke(this, EventArgs.Empty);
-                    onRecipeSuccess?.Invoke(this, EventArgs.Empty);
+                    DeliverCorrectRecipeServerRpc(i);
                     return;
                 }
             }
         }
         //no matching igredients found
+        DeliverIncorrectRecipeServerRpc();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void DeliverIncorrectRecipeServerRpc() {
+        DeliverIncorrectRecipeClientRpc();
+    }
+
+    [ClientRpc]
+    private void DeliverIncorrectRecipeClientRpc() {
         onRecipeFailed?.Invoke(this, EventArgs.Empty);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void DeliverCorrectRecipeServerRpc(int waitingRecipeSOListIndex) {
+        DeliverCorrectRecipeClientRpc(waitingRecipeSOListIndex);
+    }
+
+    [ClientRpc]
+    private void DeliverCorrectRecipeClientRpc(int waitingRecipeSOListIndex) {
+        successfulRecipeAmount++;
+        waitingRecipeSOList.RemoveAt(waitingRecipeSOListIndex);
+        onRecipeCompleted?.Invoke(this, EventArgs.Empty);
+        onRecipeSuccess?.Invoke(this, EventArgs.Empty);
     }
 
     public List<RecipeSO> GetWaitingRecipeSOList() {

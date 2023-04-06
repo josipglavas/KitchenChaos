@@ -6,7 +6,7 @@ public class StoveCounter : BaseCounter, IHasProgress {
 
     public event EventHandler<IHasProgress.OnProgressChangedEventArgs> OnProgressChanged;
     public event EventHandler<OnStateChangedEventArgs> OnStateChanged;
-    public class OnStateChangedEventArgs: EventArgs {
+    public class OnStateChangedEventArgs : EventArgs {
         public State state;
     }
 
@@ -33,33 +33,33 @@ public class StoveCounter : BaseCounter, IHasProgress {
     private void Update() {
         if (HasKitchenObject()) {
             switch (state) {
-            case State.Idle:
-                break;
-            case State.Frying:
-                fryingTimer += Time.deltaTime;
+                case State.Idle:
+                    break;
+                case State.Frying:
+                    fryingTimer += Time.deltaTime;
 
-                OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs {
+                    OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs {
                         progressNormalized = fryingTimer / fryingRecipeSO.fryingTimerMax
                     });
 
-                if (fryingTimer > fryingRecipeSO.fryingTimerMax) {
-                    //Fried
-                  
-                    GetKitchenObject().DestroySelf();
+                    if (fryingTimer > fryingRecipeSO.fryingTimerMax) {
+                        //Fried
 
-                    KitchenObject.SpawnKitchenObject(fryingRecipeSO.output, this);
+                        GetKitchenObject().DestroySelf();
 
-                    
-                    state = State.Fried;
-                    burningTimer = 0f;
-                    burningRecipeSO = GetBurningRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
+                        KitchenObject.SpawnKitchenObject(fryingRecipeSO.output, this);
 
-                    OnStateChanged?.Invoke(this, new OnStateChangedEventArgs {
-                        state = state
-                    });
-                }
-                break;
-            case State.Fried:
+
+                        state = State.Fried;
+                        burningTimer = 0f;
+                        burningRecipeSO = GetBurningRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
+
+                        OnStateChanged?.Invoke(this, new OnStateChangedEventArgs {
+                            state = state
+                        });
+                    }
+                    break;
+                case State.Fried:
                     burningTimer += Time.deltaTime;
 
                     OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs {
@@ -85,10 +85,10 @@ public class StoveCounter : BaseCounter, IHasProgress {
 
                     }
                     break;
-            case State.Burned:
-                break;
+                case State.Burned:
+                    break;
             }
-            
+
         }
     }
 
@@ -190,6 +190,10 @@ public class StoveCounter : BaseCounter, IHasProgress {
             }
         }
         return null;
-    } 
+    }
+
+    public bool isFried() {
+        return state == State.Fried;
+    }
 
 }

@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 
 public class GameInput : MonoBehaviour {
 
+    public event EventHandler OnBindingRebind;
+
     private const string PLAYER_PREFS_BINDINGS = "InputBindings";
 
     public static GameInput Instance { get; private set; }
@@ -156,6 +158,8 @@ public class GameInput : MonoBehaviour {
 
                 PlayerPrefs.SetString(PLAYER_PREFS_BINDINGS, playerInputActions.SaveBindingOverridesAsJson());
                 PlayerPrefs.Save();
+
+                OnBindingRebind?.Invoke(this, EventArgs.Empty);
             }).Start();
     }
 }
