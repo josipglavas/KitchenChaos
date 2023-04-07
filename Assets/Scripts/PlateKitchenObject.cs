@@ -2,17 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using Unity.Netcode;
+
 public class PlateKitchenObject : KitchenObject {
 
     public event EventHandler<OnIgredientAddedEventArgs> OnIngredientAdded;
-    public class OnIgredientAddedEventArgs: EventArgs {
+    public class OnIgredientAddedEventArgs : EventArgs {
         public KitchenObjectSO kitchenObjectSO;
     }
     [SerializeField] private List<KitchenObjectSO> validKitchenObjectSOList;
 
     private List<KitchenObjectSO> kitchenObjectSOList;
 
-    private void Awake() {
+    protected override void Awake() {
+        base.Awake();
         kitchenObjectSOList = new List<KitchenObjectSO>();
     }
 
@@ -24,12 +27,26 @@ public class PlateKitchenObject : KitchenObject {
         if (kitchenObjectSOList.Contains(kitchenObjectSO)) {
             return false; // already has an igredient
         } else {
-            kitchenObjectSOList.Add(kitchenObjectSO);
-            OnIngredientAdded?.Invoke(this, new OnIgredientAddedEventArgs {
-                kitchenObjectSO = kitchenObjectSO
-            });
+            AddIngredientServerRpc(KitchenGameMultiplayer.Instance.GetKitchenObjectSOIndex(kitchenObjectSO));
             return true;
+
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void AddIngredientServerRpc(int kitchenObjectSOIndex) {
+        AddIngredientClientRpc(kitchenObjectSOIndex);
+    }
+
+    [ClientRpc]
+    private void AddIngredientClientRpc(int kitchenObjectSOIndex) {
+        KitchenObjectSO kitchenObjectSO = KitchenGameMultiplayer.Instance.GetKitchenObjectSOFromIndex(kitchenObjectSOIndex);
+        kitchenObjectSOList.Add(kitchenObjectSO);
+
+        OnIngredientAdded?.Invoke(this, new OnIgredientAddedEventArgs {
+            kitchenObjectSO = kitchenObjectSO
+        });
+
     }
 
     public List<KitchenObjectSO> GetKitchenObjectSOList() {
