@@ -2,7 +2,7 @@ Welcome to one of the first projects I made with Unity Engine.
 
 Demo you can try online is located here: https://play.unity.com/mg/other/kitchencookinggame
 
-Key Features of this project:
+Key Features of this project: 
 
 Object-Oriented Programming: I've built this project on the principles of object-oriented programming, allowing for modular and maintainable code, making it easy to extend and enhance.
 
